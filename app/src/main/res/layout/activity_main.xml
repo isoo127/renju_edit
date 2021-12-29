@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FFFFFF"
+    android:gravity="center|top"
+    android:onClick="mainClicked"
+    android:orientation="vertical"
+    tools:context=".MainActivity">
+
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:layout_marginTop="5dp"
+        android:background="@color/white"
+        android:minHeight="?attr/actionBarSize"
+        android:onClick="toolbarClicked"
+        android:theme="?attr/actionBarTheme"
+        app:popupTheme="@style/MypopupTheme"
+        app:titleTextAppearance="@style/Toolbar.TitleText" />
+
+    <LinearLayout
+        android:id="@+id/capture"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#FFFFFF"
+        android:gravity="center|center_horizontal|center_vertical"
+        android:orientation="vertical">
+
+        <EditText
+            android:id="@+id/editText"
+            android:layout_width="match_parent"
+            android:layout_height="43dp"
+            android:layout_marginTop="5dp"
+            android:layout_marginBottom="16dp"
+            android:background="#99BBFF"
+            android:fontFamily="@font/spoqa_regular"
+            android:gravity="top"
+            android:onClick="editTextClicked"
+            android:textSize="15dp"
+            android:visibility="visible"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <com.renju_note.isoo.BoardLayout
+            android:id="@+id/board"
+            android:layout_width="400dp"
+            android:layout_height="400dp"
+            android:layout_marginTop="5dp"
+            android:layout_marginBottom="5dp"
+            android:background="#F2CA94"
+            android:onClick="boardClicked" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/button_set"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="horizontal"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <ImageButton
+            android:id="@+id/delete_button"
+            style="@android:style/Widget.Material.Button.Borderless"
+            android:layout_width="0dp"
+            android:layout_height="50dp"
+            android:layout_gravity="center|center_vertical"
+            android:layout_marginStart="2dp"
+            android:layout_marginLeft="5dp"
+            android:layout_marginRight="2dp"
+            android:layout_marginBottom="2dp"
+            android:layout_weight="0.8"
+            android:onClick="deleteClicked"
+            android:padding="13dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/delete"
+            tools:ignore="ContentDescription" />
+
+        <Button
+            android:id="@+id/undo_all_button"
+            style="@android:style/Widget.Material.Button.Borderless"
+            android:layout_width="0dp"
+            android:layout_height="50dp"
+            android:layout_marginLeft="2dp"
+            android:layout_marginRight="2dp"
+            android:layout_marginBottom="2dp"
+            android:layout_weight="1"
+            android:fontFamily="monospace"
+            android:onClick="backAllClicked"
+            android:text="&#8920;"
+            android:textColor="#666666"
+            android:textSize="18dp"
+            android:textStyle="normal"
+            app:backgroundTint="#FFFFFF"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <Button
+            android:id="@+id/undo_button"
+            style="@android:style/Widget.Material.Button.Borderless"
+            android:layout_width="0dp"
+            android:layout_height="50dp"
+            android:layout_marginLeft="2dp"
+            android:layout_marginRight="2dp"
+            android:layout_marginBottom="2dp"
+            android:layout_weight="1"
+            android:fontFamily="monospace"
+            android:onClick="backClicked"
+            android:text="&lt;"
+            android:textColor="#666666"
+            android:textSize="18dp"
+            android:textStyle="normal"
+            app:backgroundTint="#FFFFFF"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <TextView
+            android:id="@+id/sequence"
+            android:layout_width="0dp"
+            android:layout_height="50dp"
+            android:layout_gravity="center"
+            android:layout_marginTop="0dp"
+            android:layout_weight="0.8"
+            android:fontFamily="monospace"
+            android:gravity="center"
+            android:text="0"
+            android:textSize="18dp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <Button
+            android:id="@+id/redo_button"
+            style="@android:style/Widget.Material.Button.Borderless"
+            android:layout_width="0dp"
+            android:layout_height="50dp"
+            android:layout_marginLeft="2dp"
+            android:layout_marginRight="2dp"
+            android:layout_marginBottom="2dp"
+            android:layout_weight="1"
+            android:fontFamily="monospace"
+            android:onClick="redoClicked"
+            android:text="&gt;"
+            android:textColor="#666666"
+            android:textSize="18dp"
+            android:textStyle="normal"
+            app:backgroundTint="#FFFFFF"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <Button
+            android:id="@+id/redo_all_button"
+            style="@android:style/Widget.Material.Button.Borderless"
+            android:layout_width="0dp"
+            android:layout_height="50dp"
+            android:layout_marginLeft="2dp"
+            android:layout_marginRight="2dp"
+            android:layout_marginBottom="2dp"
+            android:layout_weight="1"
+            android:fontFamily="monospace"
+            android:onClick="redoAllClicked"
+            android:text="&#8921;"
+            android:textColor="#666666"
+            android:textSize="18dp"
+            android:textStyle="normal"
+            app:backgroundTint="#FFFFFF"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <ImageButton
+            android:id="@+id/mode_button"
+            style="@android:style/Widget.Material.Button.Borderless"
+            android:layout_width="0dp"
+            android:layout_height="50dp"
+            android:layout_gravity="center|center_vertical"
+            android:layout_marginLeft="2dp"
+            android:layout_marginEnd="2dp"
+            android:layout_marginRight="5dp"
+            android:layout_marginBottom="2dp"
+            android:layout_weight="0.8"
+            android:onClick="modeClicked"
+            android:padding="14dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/stone_mode" />
+
+    </LinearLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="invisible"
+        tools:visibility="gone">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/debug"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fontFamily="monospace"
+                android:gravity="center|center_horizontal|center_vertical"
+                android:text="developer mode"
+                android:textColor="#666666"
+                android:textSize="7dp" />
+        </LinearLayout>
+    </ScrollView>
+
+</LinearLayout>

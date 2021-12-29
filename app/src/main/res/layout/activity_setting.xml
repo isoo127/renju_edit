@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#DEDEDE"
+    android:orientation="vertical"
+    tools:context=".SettingActivity">
+
+    <LinearLayout
+        android:id="@+id/custom_bar"
+        android:layout_width="match_parent"
+        android:layout_height="54dp"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="20dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/back_button"
+            style="@style/Widget.AppCompat.Button.Borderless"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="0.2"
+            android:fontFamily="@font/spoqa_regular"
+            android:onClick="backButtonClicked"
+            android:text="&#9664;"
+            android:textSize="25dp" />
+
+        <TextView
+            android:id="@+id/setting_title"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:fontFamily="@font/spoqa_regular"
+            android:gravity="center"
+            android:text="Renju Edit Settings"
+            android:textColor="#000000"
+            android:textSize="25dp" />
+
+        <Button
+            android:id="@+id/reset_button"
+            style="@style/Widget.AppCompat.Button.Borderless"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="0.2"
+            android:fontFamily="@font/spoqa_regular"
+            android:gravity="center"
+            android:onClick="resetButtonClicked"
+            android:text="&#8635;"
+            android:textColor="#000000"
+            android:textSize="27dp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/display_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="2dp"
+        android:fontFamily="@font/spoqa_regular"
+        android:text="Display"
+        android:textSize="21dp"
+        android:textStyle="bold" />
+
+    <LinearLayout
+        android:id="@+id/display_area"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:layout_marginLeft="3dp"
+        android:layout_marginRight="3dp"
+        android:layout_marginBottom="20dp"
+        android:background="@drawable/setting"
+        android:orientation="vertical">
+
+        <CheckBox
+            android:id="@+id/show_textbox"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginLeft="11dp"
+            android:layout_marginRight="5dp"
+            android:layout_weight="1"
+            android:button="@null"
+            android:drawableRight="?android:attr/listChoiceIndicatorMultiple"
+            android:fontFamily="@font/spoqa_regular"
+            android:text="Show text box"
+            android:textSize="21dp" />
+
+        <LinearLayout
+            android:id="@+id/line1"
+            android:layout_width="match_parent"
+            android:layout_height="2dp"
+            android:layout_marginLeft="3dp"
+            android:layout_marginRight="3dp"
+            android:background="#959595"
+            android:orientation="horizontal"></LinearLayout>
+
+        <CheckBox
+            android:id="@+id/show_sequence"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginLeft="11dp"
+            android:layout_marginRight="5dp"
+            android:layout_weight="1"
+            android:button="@null"
+            android:drawableRight="?android:attr/listChoiceIndicatorMultiple"
+            android:fontFamily="@font/spoqa_regular"
+            android:text="Show sequence"
+            android:textSize="21dp" />
+
+        <LinearLayout
+            android:id="@+id/line2"
+            android:layout_width="match_parent"
+            android:layout_height="2dp"
+            android:layout_marginLeft="3dp"
+            android:layout_marginRight="3dp"
+            android:background="#959595"
+            android:orientation="horizontal">
+
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/start_point"
+            style="@style/Widget.AppCompat.Button.Borderless"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginLeft="0dp"
+            android:layout_weight="1"
+            android:fontFamily="@font/spoqa_regular"
+            android:gravity="left|center_vertical"
+            android:includeFontPadding="false"
+            android:onClick="startPointButtonClicked"
+            android:text="Start point of sequence"
+            android:textAllCaps="false"
+            android:textSize="21dp" />
+
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/customize_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="2dp"
+        android:fontFamily="@font/spoqa_regular"
+        android:text="Customizing"
+        android:textSize="21dp"
+        android:textStyle="bold" />
+
+    <LinearLayout
+        android:id="@+id/customize_area"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:layout_marginLeft="3dp"
+        android:layout_marginRight="3dp"
+        android:layout_marginBottom="20dp"
+        android:background="@drawable/setting"
+        android:orientation="vertical">
+
+        <Button
+            android:id="@+id/board_color"
+            style="@style/Widget.AppCompat.Button.Borderless"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginLeft="0dp"
+            android:layout_weight="1"
+            android:fontFamily="@font/spoqa_regular"
+            android:gravity="left|center_vertical"
+            android:includeFontPadding="false"
+            android:onClick="boardColorButtonClicked"
+            android:text="Board color"
+            android:textAllCaps="false"
+            android:textSize="21dp" />
+
+        <LinearLayout
+            android:id="@+id/line3"
+            android:layout_width="match_parent"
+            android:layout_height="2dp"
+            android:layout_marginLeft="3dp"
+            android:layout_marginRight="3dp"
+            android:background="#959595"
+            android:orientation="vertical"></LinearLayout>
+
+        <Button
+            android:id="@+id/boardLine_color"
+            style="@style/Widget.AppCompat.Button.Borderless"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginLeft="0dp"
+            android:layout_weight="1"
+            android:fontFamily="@font/spoqa_regular"
+            android:gravity="left|center_vertical"
+            android:includeFontPadding="false"
+            android:onClick="boardLineColorButtonClicked"
+            android:text="Board line color"
+            android:textAllCaps="false"
+            android:textSize="21dp" />
+
+        <LinearLayout
+            android:id="@+id/line4"
+            android:layout_width="match_parent"
+            android:layout_height="2dp"
+            android:layout_marginLeft="3dp"
+            android:layout_marginRight="3dp"
+            android:background="#959595"
+            android:orientation="horizontal">
+
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/textbox_color"
+            style="@style/Widget.AppCompat.Button.Borderless"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginLeft="0dp"
+            android:layout_weight="1"
+            android:fontFamily="@font/spoqa_regular"
+            android:gravity="left|center_vertical"
+            android:includeFontPadding="false"
+            android:onClick="textBoxColorButtonClicked"
+            android:text="Text box color"
+            android:textAllCaps="false"
+            android:textSize="21dp" />
+
+    </LinearLayout>
+
+</LinearLayout>
