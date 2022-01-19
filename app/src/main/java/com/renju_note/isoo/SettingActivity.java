@@ -1,21 +1,16 @@
 package com.renju_note.isoo;
 
-import androidx.appcompat.app.AppCompatActivity;
+import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
-import android.content.DialogInterface;
-import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Point;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
-import android.provider.MediaStore;
-import android.text.InputFilter;
-import android.text.InputType;
 import android.util.DisplayMetrics;
 import android.util.TypedValue;
 import android.view.Display;
@@ -23,33 +18,39 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.CheckBox;
-import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.NumberPicker;
 import android.widget.SeekBar;
 import android.widget.TextView;
-import android.widget.Toast;
+
 import androidx.appcompat.app.AlertDialog;
-import androidx.core.graphics.ColorUtils;
+import androidx.appcompat.app.AppCompatActivity;
 
 public class SettingActivity extends AppCompatActivity {
 
-    SharedPreferences sf;
-    SharedPreferences.Editor editor;
+    private float DENSITY;
 
-    String boardColor;
-    String editTextColor;
-    String lineColor;
-    boolean editTextVisible;
-    boolean sequenceVisible;
-    int num_minus;
+    // for saving settings
+    private SharedPreferences sf;
+    private SharedPreferences.Editor editor;
 
-    CheckBox seqV;
-    CheckBox editV;
-    Button numM;
-    Button boardC;
-    Button boardLC;
-    Button editC;
+
+    // part of basic settings
+    public String boardColor;
+    public String editTextColor;
+    public String lineColor;
+    public boolean editTextVisible;
+    public boolean sequenceVisible;
+    public int num_minus;
+
+
+    // components of setting screen
+    private CheckBox seqV;
+    private CheckBox editV;
+    private Button numM;
+    private Button boardC;
+    private Button boardLC;
+    private Button editC;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,6 +59,7 @@ public class SettingActivity extends AppCompatActivity {
 
         sf = getSharedPreferences("SetData", Activity.MODE_PRIVATE);
         editor = sf.edit();
+        editor.apply();
 
         seqV = findViewById(R.id.show_sequence);
         editV = findViewById(R.id.show_textbox);
@@ -65,6 +67,8 @@ public class SettingActivity extends AppCompatActivity {
         boardC = findViewById(R.id.board_color);
         boardLC = findViewById(R.id.boardLine_color);
         editC = findViewById(R.id.textbox_color);
+
+        DENSITY = density();
     }
 
     @Override
@@ -87,6 +91,7 @@ public class SettingActivity extends AppCompatActivity {
         editor.apply();
     }
 
+    @SuppressLint("SetTextI18n")
     private void setSetting() {
         boardColor = sf.getString("boardColor", "#F2CA94");
         editTextColor = sf.getString("editTextColor", "#99BBFF");
@@ -98,7 +103,7 @@ public class SettingActivity extends AppCompatActivity {
         seqV.setChecked(sequenceVisible);
         editV.setChecked(editTextVisible);
 
-        numM.setText("Start point of sequence  :  "+String.valueOf(num_minus));
+        numM.setText("Start point of sequence  :  "+ num_minus);
 
         boardC.setCompoundDrawablesWithIntrinsicBounds(null,null,makeDrawable(boardColor),null);
 
@@ -107,12 +112,13 @@ public class SettingActivity extends AppCompatActivity {
         editC.setCompoundDrawablesWithIntrinsicBounds(null,null,makeDrawable(editTextColor),null);
     }
 
+    // make color preview drawable
     private GradientDrawable makeDrawable(String color) {
         GradientDrawable drawable1 = new GradientDrawable();
         drawable1.setColor(Color.parseColor(color));
-        drawable1.setStroke((int)(1.2 * density()),Color.parseColor("#666666"));
+        drawable1.setStroke((int)(1.2 * DENSITY),Color.parseColor("#666666"));
         drawable1.setShape(GradientDrawable.OVAL);
-        drawable1.setSize((int)(38*density()),(int)(38*density()));
+        drawable1.setSize((int)(38*DENSITY),(int)(38*DENSITY));
         return drawable1;
     }
 
@@ -145,19 +151,17 @@ public class SettingActivity extends AppCompatActivity {
         return displayMetrics.density;
     }
 
+    @SuppressLint("SetTextI18n")
     public void startPointButtonClicked(View v) {
         AlertDialog.Builder alert = new AlertDialog.Builder(this);
         alert.setTitle("Choose start point");
-        //alert.setCancelable(false);
         NumberPicker num = new NumberPicker(this);
         num.setMaxValue(225);
         num.setMinValue(0);
         alert.setView(num);
-        alert.setPositiveButton("Apply", new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int whichButton) {
-                num_minus = num.getValue();
-                numM.setText("Start point of sequence  :  "+String.valueOf(num_minus));
-            }
+        alert.setPositiveButton("Apply", (dialog, whichButton) -> {
+            num_minus = num.getValue();
+            numM.setText("Start point of sequence  :  "+ num_minus);
         });
         alert.show();
     }
@@ -222,14 +226,11 @@ public class SettingActivity extends AppCompatActivity {
         });
 
         Button apply = dialog.findViewById(R.id.apply_button);
-        apply.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                ColorDrawable viewColor = (ColorDrawable)show_color.getBackground();
-                boardC.setCompoundDrawablesWithIntrinsicBounds(null,null,makeDrawable(String.format("#%06X", (0xFFFFFF & viewColor.getColor()))),null);
-                boardColor = String.format("#%06X", (0xFFFFFF & viewColor.getColor()));
-                dialog.dismiss();
-            }
+        apply.setOnClickListener(v1 -> {
+            ColorDrawable viewColor = (ColorDrawable)show_color.getBackground();
+            boardC.setCompoundDrawablesWithIntrinsicBounds(null,null,makeDrawable(String.format("#%06X", (0xFFFFFF & viewColor.getColor()))),null);
+            boardColor = String.format("#%06X", (0xFFFFFF & viewColor.getColor()));
+            dialog.dismiss();
         });
     }
 
@@ -293,14 +294,11 @@ public class SettingActivity extends AppCompatActivity {
         });
 
         Button apply = dialog.findViewById(R.id.apply_button);
-        apply.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                ColorDrawable viewColor = (ColorDrawable)show_color.getBackground();
-                editC.setCompoundDrawablesWithIntrinsicBounds(null,null,makeDrawable(String.format("#%06X", (0xFFFFFF & viewColor.getColor()))),null);
-                editTextColor = String.format("#%06X", (0xFFFFFF & viewColor.getColor()));
-                dialog.dismiss();
-            }
+        apply.setOnClickListener(v1 -> {
+            ColorDrawable viewColor = (ColorDrawable)show_color.getBackground();
+            editC.setCompoundDrawablesWithIntrinsicBounds(null,null,makeDrawable(String.format("#%06X", (0xFFFFFF & viewColor.getColor()))),null);
+            editTextColor = String.format("#%06X", (0xFFFFFF & viewColor.getColor()));
+            dialog.dismiss();
         });
     }
 
@@ -364,52 +362,48 @@ public class SettingActivity extends AppCompatActivity {
         });
 
         Button apply = dialog.findViewById(R.id.apply_button);
-        apply.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                ColorDrawable viewColor = (ColorDrawable)show_color.getBackground();
-                boardLC.setCompoundDrawablesWithIntrinsicBounds(null,null,makeDrawable(String.format("#%06X", (0xFFFFFF & viewColor.getColor()))),null);
-                lineColor = String.format("#%06X", (0xFFFFFF & viewColor.getColor()));
-                dialog.dismiss();
-            }
+        apply.setOnClickListener(v1 -> {
+            ColorDrawable viewColor = (ColorDrawable)show_color.getBackground();
+            boardLC.setCompoundDrawablesWithIntrinsicBounds(null,null,makeDrawable(String.format("#%06X", (0xFFFFFF & viewColor.getColor()))),null);
+            lineColor = String.format("#%06X", (0xFFFFFF & viewColor.getColor()));
+            dialog.dismiss();
         });
     }
 
+    @SuppressLint("SetTextI18n")
     public void resetButtonClicked(View v) {
         android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this, R.style.MyAlertDialogTheme);
 
         builder.setTitle("Reset your settings");
         builder.setMessage("Are you sure you want to reset your settings?");
 
-        builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                boardColor = "#F2CA94";
-                editTextColor = "#99BBFF";
-                lineColor = "#666666";
-                editTextVisible = true;
-                sequenceVisible = true;
-                num_minus =  0;
+        builder.setPositiveButton("Yes", (dialogInterface, i) -> {
+            boardColor = "#F2CA94";
+            editTextColor = "#99BBFF";
+            lineColor = "#666666";
+            editTextVisible = true;
+            sequenceVisible = true;
+            num_minus =  0;
 
-                seqV.setChecked(sequenceVisible);
-                editV.setChecked(editTextVisible);
-                numM.setText("Start point of sequence  :  "+String.valueOf(num_minus));
-                boardC.setCompoundDrawablesWithIntrinsicBounds(null,null,makeDrawable(boardColor),null);
-                boardLC.setCompoundDrawablesWithIntrinsicBounds(null,null,makeDrawable(lineColor),null);
-                editC.setCompoundDrawablesWithIntrinsicBounds(null,null,makeDrawable(editTextColor),null);
-            }
+            seqV.setChecked(sequenceVisible);
+            editV.setChecked(editTextVisible);
+            numM.setText("Start point of sequence  :  "+ num_minus);
+            boardC.setCompoundDrawablesWithIntrinsicBounds(null,null,makeDrawable(boardColor),null);
+            boardLC.setCompoundDrawablesWithIntrinsicBounds(null,null,makeDrawable(lineColor),null);
+            editC.setCompoundDrawablesWithIntrinsicBounds(null,null,makeDrawable(editTextColor),null);
         });
 
-        builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
+        builder.setNegativeButton("No", (dialogInterface, i) -> {
 
-            }
         });
 
         builder.show();
     }
 
+    /*
+    dp -> px : (int)(dp * density + 0.5) = px
+    (int)(size.x(px) / num / density + 0.5)(dp) : the ratio based on the width
+     */
     private void setRatio() {
         WindowManager windowManager = (WindowManager)getApplicationContext().getSystemService(Context.WINDOW_SERVICE);
         Display display = windowManager.getDefaultDisplay();
@@ -421,14 +415,14 @@ public class SettingActivity extends AppCompatActivity {
         LinearLayout custom_area = findViewById(R.id.customize_area);
 
         LinearLayout.LayoutParams params_bar = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,(int)(size.x / 7.6));
-        params_bar.bottomMargin = (int)(20*density()+0.5);
-        params_bar.topMargin = (int)(5*density()+0.5);
+        params_bar.bottomMargin = (int)(20*DENSITY+0.5);
+        params_bar.topMargin = (int)(5*DENSITY+0.5);
         bar.setLayoutParams(params_bar);
 
-        LinearLayout.LayoutParams params_area = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,(int)(size.x / 2));
-        params_area.leftMargin = (int)(3*density()+0.5);
-        params_area.rightMargin = (int)(3*density()+0.5);
-        params_area.bottomMargin = (int)(20*density()+0.5);
+        LinearLayout.LayoutParams params_area = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, size.x / 2);
+        params_area.leftMargin = (int)(3*DENSITY+0.5);
+        params_area.rightMargin = (int)(3*DENSITY+0.5);
+        params_area.bottomMargin = (int)(20*DENSITY+0.5);
 
         display_area.setLayoutParams(params_area);
         custom_area.setLayoutParams(params_area);
@@ -436,21 +430,23 @@ public class SettingActivity extends AppCompatActivity {
         Button back_bt = findViewById(R.id.back_button);
         Button reset_bt = findViewById(R.id.reset_button);
 
-        back_bt.setTextSize(TypedValue.COMPLEX_UNIT_DIP,(int)(size.x / 16.4 / density() + 0.5));
-        reset_bt.setTextSize(TypedValue.COMPLEX_UNIT_DIP,(int)(size.x / 15.2 / density() + 0.5));
-        seqV.setTextSize(TypedValue.COMPLEX_UNIT_DIP,(int)(size.x / 19.6 / density() + 0.5));
-        editV.setTextSize(TypedValue.COMPLEX_UNIT_DIP,(int)(size.x / 19.6 / density() + 0.5));
-        numM.setTextSize(TypedValue.COMPLEX_UNIT_DIP,(int)(size.x / 19.6 / density() + 0.5));
-        boardC.setTextSize(TypedValue.COMPLEX_UNIT_DIP,(int)(size.x / 19.6 / density() + 0.5));
-        boardLC.setTextSize(TypedValue.COMPLEX_UNIT_DIP,(int)(size.x / 19.6 / density() + 0.5));
-        editC.setTextSize(TypedValue.COMPLEX_UNIT_DIP,(int)(size.x / 19.6 / density() + 0.5));
+        back_bt.setTextSize(TypedValue.COMPLEX_UNIT_DIP,(int)(size.x / 16.4 / DENSITY + 0.5));
+        reset_bt.setTextSize(TypedValue.COMPLEX_UNIT_DIP,(int)(size.x / 15.2 / DENSITY + 0.5));
+
+        int textSize = (int)(size.x / 19.6 / DENSITY + 0.5);
+        seqV.setTextSize(TypedValue.COMPLEX_UNIT_DIP,textSize);
+        editV.setTextSize(TypedValue.COMPLEX_UNIT_DIP,textSize);
+        numM.setTextSize(TypedValue.COMPLEX_UNIT_DIP,textSize);
+        boardC.setTextSize(TypedValue.COMPLEX_UNIT_DIP,textSize);
+        boardLC.setTextSize(TypedValue.COMPLEX_UNIT_DIP,textSize);
+        editC.setTextSize(TypedValue.COMPLEX_UNIT_DIP,textSize);
 
         TextView title = findViewById(R.id.setting_title);
         TextView display_title = findViewById(R.id.display_title);
         TextView custom_title = findViewById(R.id.customize_title);
 
-        title.setTextSize(TypedValue.COMPLEX_UNIT_DIP,(int)(size.x / 19.6 / density() + 0.5));
-        display_title.setTextSize(TypedValue.COMPLEX_UNIT_DIP,(int)(size.x / 19.6 / density() + 0.5));
-        custom_title.setTextSize(TypedValue.COMPLEX_UNIT_DIP,(int)(size.x / 19.6 / density() + 0.5));
+        title.setTextSize(TypedValue.COMPLEX_UNIT_DIP,textSize);
+        display_title.setTextSize(TypedValue.COMPLEX_UNIT_DIP,textSize);
+        custom_title.setTextSize(TypedValue.COMPLEX_UNIT_DIP,textSize);
     }
 }

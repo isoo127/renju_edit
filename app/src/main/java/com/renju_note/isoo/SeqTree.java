@@ -1,25 +1,32 @@
 package com.renju_note.isoo;
 
-import android.content.Context;
-
-import java.io.FileOutputStream;
-import java.io.ObjectOutputStream;
 import java.io.Serializable;
 
 public class SeqTree implements Serializable {
-    private Node head = new Node(-1,-1);
-    private Node now;
-    private int[][] now_board = new int[15][15];
-    private String text_box;
+    private static final long serialVersionUID = 2765198187236704398L;
 
-    public class Node implements Serializable{
-        private int x,y;
+    private final Node head = new Node(-1, -1);
+    private Node now;
+    private final int[][] now_board = new int[15][15];
+
+    // for released version 1.2.3
+    private final String text_box = null;
+
+    public SeqTree() {
+        this.now = this.head;
+    }
+
+    public static class Node implements Serializable{
+        private static final long serialVersionUID = -6403100239045118824L;
+
+        private final int x;
+        private final int y;
         private Node chlid;
         private Node next;
         private Node parent;
 
         private String text;
-        //private String text_box;
+        private String boxText;
 
         public Node(int x, int y) {
             this.x = x;
@@ -37,7 +44,7 @@ public class SeqTree implements Serializable {
             return y;
         }
 
-        public Node getChlid() {
+        public Node getChild() {
             return chlid;
         }
 
@@ -47,7 +54,7 @@ public class SeqTree implements Serializable {
             return parent;
         }
 
-        public void setChlid(Node chlid) {
+        public void setChild(Node chlid) {
             this.chlid = chlid;
         }
 
@@ -62,12 +69,20 @@ public class SeqTree implements Serializable {
         public void setText(String text) {
             this.text = text;
         }
+
+        public void setBoxText(String boxText) {
+            this.boxText = boxText;
+        }
+
+        public String getBoxText() {
+            return boxText;
+        }
     }
 
-    public void next(Node current_node,int x,int y) {
-        if(current_node == null || current_node.getChlid() == null) {
-            Node newChild = new Node(x,y);
-            if (head.getChlid() == null) {
+    public void next(Node current_node, int x, int y, int nowSequence) {
+        if(current_node == null || current_node.getChild() == null) {
+            Node newChild = new Node(x, y);
+            if (head.getChild() == null) {
                 head.chlid = newChild;
                 newChild.parent = head;
                 current_node = head;
@@ -75,20 +90,29 @@ public class SeqTree implements Serializable {
             newChild.parent = current_node;
             current_node.chlid = newChild;
             now = newChild;
-            now_board[x][y] = 1;
+            if((nowSequence % 2) == 0)
+                now_board[x][y] = 1;
+            else
+                now_board[x][y] = -1;
         } else {
             for(Node temp = current_node.chlid;temp != null;temp = temp.next) {
                 if(temp.x == x && temp.y == y) {
                     now = temp;
-                    now_board[x][y] = 1;
+                    if((nowSequence % 2) == 0)
+                        now_board[x][y] = 1;
+                    else
+                        now_board[x][y] = -1;
                     return;
                 }
                 if(temp.next == null) {
-                    Node newNext = new Node(x,y);
+                    Node newNext = new Node(x, y);
                     newNext.parent = current_node;
                     temp.next = newNext;
                     now = newNext;
-                    now_board[x][y] = 1;
+                    if((nowSequence % 2) == 0)
+                        now_board[x][y] = 1;
+                    else
+                        now_board[x][y] = -1;
                     return;
                 }
             }
@@ -100,20 +124,23 @@ public class SeqTree implements Serializable {
         now_board[current_node.x][current_node.y] = 0;
     }
 
-    public void redo(Node current_node) {
+    public void redo(Node current_node, int nowSequence) {
         if(current_node.chlid != null && current_node.chlid.next == null) {
-            now = current_node.getChlid();
-            now_board[current_node.getChlid().getX()][current_node.getChlid().getY()] = 1;
+            now = current_node.getChild();
+            if((nowSequence % 2) == 0)
+                now_board[current_node.getChild().getX()][current_node.getChild().getY()] = 1;
+            else
+                now_board[current_node.getChild().getX()][current_node.getChild().getY()] = -1;
         }
     }
 
     public void delete(Node current_node) {
         now = current_node.parent;
         if(now.chlid.next == null) {
-            now.setChlid(null);
+            now.setChild(null);
         } else {
-            if(now.getChlid().getX() == current_node.getX() && now.getChlid().getY() == current_node.getY()) {
-                now.setChlid(now.getChlid().getNext());
+            if(now.getChild().getX() == current_node.getX() && now.getChild().getY() == current_node.getY()) {
+                now.setChild(now.getChild().getNext());
             } else {
                 for (Node temp = now.chlid; ; temp = temp.next) {
                     if (temp.getNext().getX() == current_node.getX() && temp.getNext().getY() == current_node.getY()) {
@@ -131,30 +158,24 @@ public class SeqTree implements Serializable {
     }
 
     public void createChild(Node current_node, int x, int y) {
-        if(current_node == null || current_node.getChlid() == null) {
-            Node newChild = new Node(x,y);
-            if (head.getChlid() == null) {
+        if(current_node == null || current_node.getChild() == null) {
+            Node newChild = new Node(x, y);
+            if (head.getChild() == null) {
                 head.chlid = newChild;
                 newChild.parent = head;
                 current_node = head;
             }
             newChild.parent = current_node;
             current_node.chlid = newChild;
-            //now = newChild;
-            //now_board[x][y] = 1;
         } else {
             for(Node temp = current_node.chlid;temp != null;temp = temp.next) {
                 if(temp.x == x && temp.y == y) {
-                    //now = temp;
-                    //now_board[x][y] = 1;
                     return;
                 }
                 if(temp.next == null) {
-                    Node newNext = new Node(x,y);
+                    Node newNext = new Node(x, y);
                     newNext.parent = current_node;
                     temp.next = newNext;
-                    //now = newNext;
-                    //now_board[x][y] = 1;
                     return;
                 }
             }
@@ -162,7 +183,7 @@ public class SeqTree implements Serializable {
     }
 
     public void createNext(Node temp, Node current_node, int x, int y) {
-        Node newNext = new Node(x,y);
+        Node newNext = new Node(x, y);
         newNext.parent = current_node;
         temp.next = newNext;
     }
@@ -189,10 +210,6 @@ public class SeqTree implements Serializable {
                 now_board[i][j] = 0;
             }
         }
-    }
-
-    public void setText_box(String text_box) {
-        this.text_box = text_box;
     }
 
     public String getText_box() {
