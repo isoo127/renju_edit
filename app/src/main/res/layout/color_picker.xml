@@ -32,7 +32,8 @@
             android:layout_height="wrap_content"
             android:layout_weight="0.1"
             android:gravity="center"
-            android:text="R" />
+            android:text="R"
+            android:textSize="14dp" />
 
         <SeekBar
             android:id="@+id/r_bar"
@@ -54,7 +55,8 @@
             android:layout_height="wrap_content"
             android:layout_weight="0.1"
             android:gravity="center"
-            android:text="G" />
+            android:text="G"
+            android:textSize="14dp" />
 
         <SeekBar
             android:id="@+id/g_bar"
@@ -76,7 +78,8 @@
             android:layout_height="wrap_content"
             android:layout_weight="0.1"
             android:gravity="center"
-            android:text="B" />
+            android:text="B"
+            android:textSize="14dp" />
 
         <SeekBar
             android:id="@+id/b_bar"
@@ -92,5 +95,6 @@
         android:layout_width="100dp"
         android:layout_height="wrap_content"
         android:text="Apply"
-        android:textColor="#FF018786" />
+        android:textColor="#FF018786"
+        android:textSize="14dp" />
 </LinearLayout>

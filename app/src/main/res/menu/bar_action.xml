@@ -4,10 +4,16 @@
     xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item
+        android:id="@+id/action_search"
+        android:icon="@drawable/search"
+        android:title="Search"
+        app:showAsAction="always"/>
+
+    <item
         android:id="@+id/action_capture"
         android:icon="@drawable/capture"
         android:title="Capture"
-        app:showAsAction="always" />
+        app:showAsAction="always"/>
 
 
     <item android:title="New File"
@@ -18,6 +24,8 @@
         android:id="@+id/load_board"/>
     <item android:title="Settings"
         android:id="@+id/setting"/>
+    <item android:title="Download games"
+        android:id="@+id/downloadGames"/>
     <item android:title="About"
         android:id="@+id/about"/>
 </menu>

@@ -90,9 +90,9 @@ public class SeqTree implements Serializable {
             newChild.parent = current_node;
             current_node.chlid = newChild;
             now = newChild;
-            if((nowSequence % 2) == 0)
+            if((nowSequence % 2) == 0) // mean black
                 now_board[x][y] = 1;
-            else
+            else // mean white
                 now_board[x][y] = -1;
         } else {
             for(Node temp = current_node.chlid;temp != null;temp = temp.next) {

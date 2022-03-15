@@ -1,17 +1,10 @@
 package com.renju_note.isoo;
 
-import androidx.activity.result.ActivityResult;
-import androidx.activity.result.ActivityResultCallback;
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.graphics.ColorUtils;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
@@ -34,6 +27,7 @@ import android.provider.MediaStore;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.Display;
 import android.view.Menu;
@@ -44,8 +38,22 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.activity.result.ActivityResult;
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.view.menu.ActionMenuItemView;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import androidx.core.graphics.ColorUtils;
+
+import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -55,8 +63,15 @@ import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
+import java.net.URL;
+import java.net.URLConnection;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+
+import gamesParsing.GameManager;
+import io.realm.Realm;
+
+import static android.content.ContentValues.TAG;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -119,9 +134,23 @@ public class MainActivity extends AppCompatActivity {
     private SharedPreferences sf;
     private SharedPreferences.Editor editor;
 
-    //part of basic settings
+    // part of basic settings
     public String editTextColor;
     public boolean editTextVisible;
+
+    // for saving and searching games data
+    // ----------------------------------------------- //
+    public boolean searchMode = false;
+    public Realm realm;
+    private GameManager gameManager;
+
+    // for custom progressDialog
+    private Dialog progressDialog;
+    private TextView progressMsg;
+    private ProgressBar progressBar;
+
+    private Thread dataThread;
+    // ----------------------------------------------- //
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -155,141 +184,171 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
         DENSITY = density();
+
+        realm = Realm.getDefaultInstance();
+
+        progressDialog = new Dialog(this);
+        progressDialog.setCancelable(false);
+        progressDialog.setContentView(R.layout.progress_dialog);
+        Button cancel = progressDialog.findViewById(R.id.progressDialogCancel);
+        cancel.setOnClickListener(v -> {
+            dataThread.interrupt();
+            progressDialog.dismiss();
+        });
+        progressMsg = progressDialog.findViewById(R.id.progressDialogMsg);
+        progressBar = progressDialog.findViewById(R.id.progressBar);
     }
 
     /*
     method that runs on the toolbar
      */
-    @SuppressLint("NonConstantResourceId")
+    @SuppressLint("RestrictedApi")
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.action_capture:
-                AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this, R.style.MyAlertDialogTheme);
+        if(item.getItemId() == R.id.action_search) {
+            ActionMenuItemView search = findViewById(R.id.action_search);
+            if(searchMode) {
+                search.setIcon(ContextCompat.getDrawable(this,R.drawable.search));
+                searchMode = false;
 
-                builder.setTitle("Screenshot");
-                builder.setMessage("Are you sure you want to capture this board?");
+                Toast.makeText(getApplicationContext(),"search mode off",Toast.LENGTH_SHORT).show();
+            } else {
+                search.setIcon(ContextCompat.getDrawable(this,R.drawable.search_red));
+                searchMode = true;
 
-                builder.setPositiveButton("Yes", (dialogInterface, i) -> {
-                    LinearLayout capture = findViewById(R.id.capture);
-                    capture.setDrawingCacheEnabled(true);
-                    Bitmap bitmap = Bitmap.createBitmap(capture.getDrawingCache());
-                    capture.setDrawingCacheEnabled(false);
+                Toast.makeText(getApplicationContext(),"search mode on",Toast.LENGTH_SHORT).show();
+            }
+            return true;
+        } else if (item.getItemId() == R.id.action_capture) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this, R.style.MyAlertDialogTheme);
 
-                    if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            builder.setTitle("Screenshot");
+            builder.setMessage("Are you sure you want to capture this board?");
+
+            builder.setPositiveButton("Yes", (dialogInterface, i) -> {
+                LinearLayout capture = findViewById(R.id.capture);
+                capture.setDrawingCacheEnabled(true);
+                Bitmap bitmap = Bitmap.createBitmap(capture.getDrawingCache());
+                capture.setDrawingCacheEnabled(false);
+
+                if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    long time = System.currentTimeMillis();
+                    @SuppressLint("SimpleDateFormat") SimpleDateFormat day = new SimpleDateFormat("yyyyMMddhhmmssSSS");
+                    String output = day.format(new Date(time));
+
+                    ContentValues values = new ContentValues();
+                    values.put(MediaStore.Images.Media.DISPLAY_NAME, "renju"+output+".jpeg");
+                    values.put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg");
+                    values.put(MediaStore.Images.Media.IS_PENDING, 1);
+
+                    final Uri collection = MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY);
+                    final Uri item1 = getContentResolver().insert(collection, values);
+
+                    try {
+                        ParcelFileDescriptor fileDescriptor = getContentResolver().openFileDescriptor(item1, "w", null);
+                        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+                        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, bytes);
+                        byte[] bitmapData = bytes.toByteArray();
+                        InputStream inputStream = new ByteArrayInputStream(bitmapData);
+
+                        ByteArrayOutputStream byteBuffer = new ByteArrayOutputStream();
+                        int bufferSize = 1024;
+                        byte[] buffer = new byte[bufferSize];
+                        int len;
+                        while ((len = inputStream.read(buffer)) != -1) {
+                            byteBuffer.write(buffer, 0, len);
+                        }
+
+                        byte[] str2Byte = byteBuffer.toByteArray();
+
+                        FileOutputStream outputStream = new FileOutputStream(fileDescriptor.getFileDescriptor());
+                        outputStream.write(str2Byte);
+                        outputStream.close();
+                        inputStream.close();
+                        fileDescriptor.close();
+                        getContentResolver().update(item1, values, null, null);
+                        Toast.makeText(getApplicationContext(), "save", Toast.LENGTH_SHORT).show();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    try {
+                        values.clear();
+                        values.put(MediaStore.Images.Media.IS_PENDING, 0);
+                        getContentResolver().update(item1, values, null, null);
+                    } catch (Exception e) {
+                        Toast.makeText(getApplicationContext(), "failed to update gallery", Toast.LENGTH_SHORT).show();
+                    }
+                } else {
+                    try {
                         long time = System.currentTimeMillis();
                         @SuppressLint("SimpleDateFormat") SimpleDateFormat day = new SimpleDateFormat("yyyyMMddhhmmssSSS");
                         String output = day.format(new Date(time));
+                        String folder = Environment.getExternalStorageDirectory().getAbsolutePath() + "/DCIM/Screenshots";
+                        String file = folder + File.separator + output + ".jpeg";
 
-                        ContentValues values = new ContentValues();
-                        values.put(MediaStore.Images.Media.DISPLAY_NAME, "renju"+output+".jpeg");
-                        values.put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg");
-                        values.put(MediaStore.Images.Media.IS_PENDING, 1);
-
-                        final Uri collection = MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY);
-                        final Uri item1 = getContentResolver().insert(collection, values);
-
-                        try {
-                            ParcelFileDescriptor fileDescriptor = getContentResolver().openFileDescriptor(item1, "w", null);
-                            ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-                            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, bytes);
-                            byte[] bitmapData = bytes.toByteArray();
-                            InputStream inputStream = new ByteArrayInputStream(bitmapData);
-
-                            ByteArrayOutputStream byteBuffer = new ByteArrayOutputStream();
-                            int bufferSize = 1024;
-                            byte[] buffer = new byte[bufferSize];
-                            int len;
-                            while ((len = inputStream.read(buffer)) != -1) {
-                                byteBuffer.write(buffer, 0, len);
-                            }
-
-                            byte[] str2Byte = byteBuffer.toByteArray();
-
-                            FileOutputStream outputStream = new FileOutputStream(fileDescriptor.getFileDescriptor());
-                            outputStream.write(str2Byte);
-                            outputStream.close();
-                            inputStream.close();
-                            fileDescriptor.close();
-                            getContentResolver().update(item1, values, null, null);
-                            Toast.makeText(getApplicationContext(), "save", Toast.LENGTH_SHORT).show();
-                        } catch (IOException e) {
-                            e.printStackTrace();
+                        File FolderPath = new File(folder);
+                        if (!FolderPath.exists()) {
+                            boolean success = FolderPath.mkdirs();
+                            if(!success)
+                                System.out.println("failed mkdirs");
                         }
-                        try {
-                            values.clear();
-                            values.put(MediaStore.Images.Media.IS_PENDING, 0);
-                            getContentResolver().update(item1, values, null, null);
-                        } catch (Exception e) {
-                            Toast.makeText(getApplicationContext(), "failed to update gallery", Toast.LENGTH_SHORT).show();
-                        }
-                    } else {
-                        try {
-                            long time = System.currentTimeMillis();
-                            @SuppressLint("SimpleDateFormat") SimpleDateFormat day = new SimpleDateFormat("yyyyMMddhhmmssSSS");
-                            String output = day.format(new Date(time));
-                            String folder = Environment.getExternalStorageDirectory().getAbsolutePath() + "/DCIM/Screenshots";
-                            String file = folder + File.separator + output + ".jpeg";
 
-                            File FolderPath = new File(folder);
-                            if (!FolderPath.exists()) {
-                                boolean success = FolderPath.mkdirs();
-                                if(!success)
-                                    System.out.println("failed mkdirs");
-                            }
-
-                            OutputStream outputStream = new FileOutputStream(file);
-                            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream);
-                            outputStream.flush();
-                            outputStream.close();
-                            getApplicationContext().sendBroadcast(new Intent( Intent.ACTION_MEDIA_SCANNER_SCAN_FILE,  Uri.parse("file://"+file)));
-                            Toast.makeText(getApplicationContext(), "save", Toast.LENGTH_SHORT).show();
-                        } catch (IOException e) {
-                            Toast.makeText(getApplicationContext(), e.toString(), Toast.LENGTH_LONG).show();
-                        }
+                        OutputStream outputStream = new FileOutputStream(file);
+                        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream);
+                        outputStream.flush();
+                        outputStream.close();
+                        getApplicationContext().sendBroadcast(new Intent( Intent.ACTION_MEDIA_SCANNER_SCAN_FILE,  Uri.parse("file://"+file)));
+                        Toast.makeText(getApplicationContext(), "save", Toast.LENGTH_SHORT).show();
+                    } catch (IOException e) {
+                        Toast.makeText(getApplicationContext(), e.toString(), Toast.LENGTH_LONG).show();
                     }
-                });
+                }
+            });
 
-                builder.setNegativeButton("No", (dialogInterface, i) -> {
+            builder.setNegativeButton("No", (dialogInterface, i) -> {
 
-                });
+            });
 
-                builder.show();
-                return true ;
-            case R.id.new_board:
-                AlertDialog.Builder builder1 = new AlertDialog.Builder(MainActivity.this, R.style.MyAlertDialogTheme);
+            builder.show();
+            return true ;
+        } else if (item.getItemId() == R.id.new_board) {
+            AlertDialog.Builder builder1 = new AlertDialog.Builder(MainActivity.this, R.style.MyAlertDialogTheme);
 
-                builder1.setTitle("New board");
-                builder1.setMessage("Are you sure you want to load a new board?");
+            builder1.setTitle("New board");
+            builder1.setMessage("Are you sure you want to load a new board?");
 
-                builder1.setPositiveButton("Yes", (dialogInterface, i) -> board.newBoard());
+            builder1.setPositiveButton("Yes", (dialogInterface, i) -> board.newBoard());
 
-                builder1.setNegativeButton("No", (dialogInterface, i) -> {
+            builder1.setNegativeButton("No", (dialogInterface, i) -> {
 
-                });
+            });
 
-                builder1.show();
-                return true ;
-            case R.id.save_board :
-                save();
-                return true ;
-            case R.id.load_board:
-                load();
-                return true;
-            case R.id.setting:
-                Intent intent = new Intent(getApplicationContext(), SettingActivity.class);
-                startActivityResultSet.launch(intent);
-                return true;
-            case R.id.about:
-                AlertDialog.Builder builder2 = new AlertDialog.Builder(MainActivity.this, R.style.MyAlertDialogTheme);
-                builder2.setTitle("About Renju Edit");
-                builder2.setMessage("Developer : isoo (Kang Sang-Min)\n\n" +
-                        "Design Advice : jimflower\n\n" +
-                        "Special thanks for nuguri, buddy\n" +
-                        "August 20th, 2021");
-                builder2.show();
-            default :
-                return super.onOptionsItemSelected(item);
+            builder1.show();
+            return true ;
+        } else if (item.getItemId() == R.id.save_board) {
+            save();
+            return true ;
+        } else if (item.getItemId() == R.id.load_board) {
+            load();
+            return true;
+        } else if (item.getItemId() == R.id.setting) {
+            Intent intent = new Intent(getApplicationContext(), SettingActivity.class);
+            startActivityResultSet.launch(intent);
+            return true;
+        } else if (item.getItemId() == R.id.downloadGames) {
+            downloadGames();
+            return true;
+        } else if (item.getItemId() == R.id.about) {
+            AlertDialog.Builder builder2 = new AlertDialog.Builder(MainActivity.this, R.style.MyAlertDialogTheme);
+            builder2.setTitle("About Renju Edit");
+            builder2.setMessage("Developer : isoo (Kang Sang-Min)\n\n" +
+                    "Design Advice : jimflower\n\n" +
+                    "Special thanks for nuguri, buddy\n" +
+                    "August 20th, 2021");
+            builder2.show();
+            return true;
+        } else {
+            return super.onOptionsItemSelected(item);
         }
     }
 
@@ -677,4 +736,53 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
     );
+
+    @SuppressLint("SetTextI18n")
+    private void downloadGames() {
+        progressMsg.setText("connecting to server...");
+        progressBar.setIndeterminate(true);
+        progressDialog.show();
+        dataThread = new Thread() {
+            @Override
+            public void run() {
+                InputStream inputStream;
+                URLConnection connection;
+                try {
+                    URL url = new URL("https://renju.net/downloads/getdatabase.php");
+                    connection = url.openConnection();
+                    connection.connect();
+
+                    inputStream = new BufferedInputStream(url.openStream(), 8192);
+                    gameManager = new GameManager(inputStream, progressMsg, progressBar);
+                    Log.d(TAG, "run: Main 756");
+
+                    Message handlerMsg = new Message();
+                    handlerMsg.arg1 = 0;
+                    Log.d(TAG, "run: Main 761");
+                    dataHandler.sendMessage(handlerMsg);
+                    Log.d(TAG, "run: Main 763");
+                } catch (Exception e) {
+                    Thread.currentThread().interrupt();
+                    Toast.makeText(getApplicationContext(),"Error : failed to save data", Toast.LENGTH_SHORT).show();
+                    e.printStackTrace();
+                }
+            }
+        };
+        dataThread.start();
+    }
+
+    Handler dataHandler = new Handler(Looper.getMainLooper()) {
+        @Override
+        public void handleMessage(@NonNull Message msg) {
+            if(msg.arg1 == 0) {
+                Log.d(TAG, "handleMessage: Main 778");
+                realm.beginTransaction();
+                realm.deleteAll();
+                realm.insert(gameManager.getGames());
+                realm.commitTransaction();
+                progressDialog.dismiss();
+            }
+        }
+    };
+
 }
